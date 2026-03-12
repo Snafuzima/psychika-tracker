@@ -33,6 +33,9 @@
   ctx.font = "bold 104px Georgia, serif";
   ctx.fillText("Sandra", 256, 256);
   document.getElementById("appIcon").href = canvas.toDataURL("image/png");
+  // Draw mini icon in header
+  const mini = document.getElementById("headerIcon");
+  if(mini){ const mc = mini.getContext("2d"); mc.drawImage(canvas,0,0,36,36); }
 })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -76,6 +79,7 @@
     padding: 16px 20px 12px;
   }
 
+  .app-header-inner { display: flex; align-items: center; }
   .app-title {
     font-family: 'Playfair Display', serif;
     font-size: 22px;
@@ -535,7 +539,7 @@
 <body>
 
 <div class="app-header">
-  <div class="app-title">🧠 Психика</div>
+  <div class="app-header-inner"><canvas id="headerIcon" width="36" height="36" style="border-radius:8px;vertical-align:middle;margin-right:10px"></canvas><span class="app-title">Sandra</span></div>
   <div class="app-date" id="headerDate"></div>
 </div>
 
