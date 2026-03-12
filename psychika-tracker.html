@@ -423,6 +423,81 @@
     margin-top: 4px;
   }
 
+  /* ─── PRINCIPLES ─── */
+  .principles-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .principles-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.5;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .principles-list li::before {
+    content: '→';
+    color: var(--accent);
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 1px;
+  }
+
+  /* ─── HISTORY ─── */
+  .history-empty {
+    text-align: center;
+    color: var(--text3);
+    font-size: 13px;
+    padding: 30px 0;
+  }
+
+  .history-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .history-item:active { opacity: 0.7; }
+
+  .history-item-date {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .history-item-preview {
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .history-item-preview span {
+    background: var(--border);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .modal-large {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
   /* Scrollbar */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -857,8 +932,10 @@
 
 <!-- Bottom Bar -->
 <div class="bottom-bar">
-  <button class="btn btn-secondary" onclick="saveData()">💾 Сохранить</button>
-  <button class="btn btn-primary" onclick="openExport()">📋 Экспорт для ChatGPT</button>
+  <button class="btn btn-secondary" onclick="saveData()" style="font-size:11px">💾 Сохранить</button>
+  <button class="btn btn-secondary" onclick="openHistory()" style="font-size:11px">📅 История</button>
+  <button class="btn btn-secondary" onclick="openPrinciples()" style="font-size:11px">📌 Принципы</button>
+  <button class="btn btn-primary" onclick="openExport()" style="font-size:11px">📋 Экспорт</button>
 </div>
 
 <!-- Export Modal -->
@@ -870,6 +947,53 @@
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="closeExport()">Закрыть</button>
       <button class="btn btn-primary" onclick="copyReport()">📋 Скопировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Principles Modal -->
+<div class="modal-overlay" id="principlesModal" onclick="closeModalOnBg(event,'principlesModal')">
+  <div class="modal modal-large">
+    <div class="modal-title">📌 Принципы</div>
+    <div class="modal-sub">Ежедневные ориентиры</div>
+    <ul class="principles-list">
+      <li>Есть медленно, 20–30 минут</li>
+      <li>Кофеин до 16:00, сон до 23:00</li>
+      <li>3–4 приёма пищи, белок утром/днём, овощи вечером</li>
+      <li>Избегать сладостей, газировки, бобовых, сырого лука/чеснока</li>
+      <li>Перекусы только при голоде (фрукты, йогурт, орехи)</li>
+      <li>Активность 30–60 мин/день, силовые 2–3 раза в неделю</li>
+      <li>Дыхание 5 мин перед едой, осознанное питание</li>
+      <li>Раз в неделю маленькое удовольствие без переедания</li>
+      <li>Медитация, работа со стрессом</li>
+    </ul>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="closeModal('principlesModal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal-overlay" id="historyModal" onclick="closeModalOnBg(event,'historyModal')">
+  <div class="modal modal-large">
+    <div class="modal-title">📅 История</div>
+    <div class="modal-sub">Записи за прошлые дни</div>
+    <div id="historyList"></div>
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="btn btn-primary" onclick="closeModal('historyModal')">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Detail Modal -->
+<div class="modal-overlay" id="historyDetailModal" onclick="closeModalOnBg(event,'historyDetailModal')">
+  <div class="modal modal-large">
+    <div class="modal-title" id="historyDetailTitle"></div>
+    <div class="modal-sub">Отчёт за день</div>
+    <div class="export-text" id="historyDetailText" style="max-height:320px"></div>
+    <div class="modal-btns" style="margin-top:14px">
+      <button class="btn btn-secondary" onclick="closeModal('historyDetailModal')">Назад</button>
+      <button class="btn btn-primary" onclick="copyHistoryDetail()">📋 Скопировать</button>
     </div>
   </div>
 </div>
@@ -978,7 +1102,88 @@ function collectData() {
 // ─── EXPORT ───
 function openExport() {
   const d = collectData();
-  const report = `🧠 Отчет Психика — ${d.date}
+  document.getElementById('exportText').textContent = buildReport(d);
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExport() { closeModal('exportModal'); }
+function closeExportOnBg(e) { closeModalOnBg(e, 'exportModal'); }
+
+function copyReport() {
+  const text = document.getElementById('exportText').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('✓ Скопировано в буфер');
+    });
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('✓ Скопировано в буфер');
+  }
+}
+
+// ─── MODAL HELPERS ───
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function closeModalOnBg(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+// ─── PRINCIPLES ───
+function openPrinciples() {
+  document.getElementById('principlesModal').classList.add('open');
+}
+
+// ─── HISTORY ───
+function openHistory() {
+  const list = document.getElementById('historyList');
+  list.innerHTML = '';
+
+  const keys = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('psychika_')) keys.push(k);
+    }
+  } catch(e) {}
+
+  keys.sort().reverse();
+
+  if (keys.length === 0) {
+    list.innerHTML = '<div class="history-empty">Пока нет сохранённых записей.<br>Заполните форму и нажмите «Сохранить».</div>';
+  } else {
+    keys.forEach(k => {
+      try {
+        const d = JSON.parse(localStorage.getItem(k));
+        const dateDisplay = k.replace('psychika_', '');
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+          <div class="history-item-date">📅 ${d.date || dateDisplay}</div>
+          <div class="history-item-preview">
+            <span>⚡ ${d.energy}/10</span>
+            <span>😰 ${d.anxiety}/10</span>
+            <span>💪 ${d.confidence}/10</span>
+            <span>⚖️ ${d.weight} кг</span>
+            <span>🛌 ${d.sleepHours} ч</span>
+          </div>`;
+        item.onclick = () => showHistoryDetail(d);
+        list.appendChild(item);
+      } catch(e) {}
+    });
+  }
+
+  document.getElementById('historyModal').classList.add('open');
+}
+
+function buildReport(d) {
+  return `🧠 Отчет Психика — ${d.date}
 
 1. Базовое состояние
 • Энергия: ${d.energy}/10
@@ -1062,25 +1267,18 @@ ${d.bodyConclusion}
 
 🔄 Фокус на завтра
 ${d.tomorrowFocus}`;
-
-  document.getElementById('exportText').textContent = report;
-  document.getElementById('exportModal').classList.add('open');
 }
 
-function closeExport() {
-  document.getElementById('exportModal').classList.remove('open');
+function showHistoryDetail(d) {
+  document.getElementById('historyDetailTitle').textContent = d.date || '';
+  document.getElementById('historyDetailText').textContent = buildReport(d);
+  document.getElementById('historyDetailModal').classList.add('open');
 }
 
-function closeExportOnBg(e) {
-  if (e.target === document.getElementById('exportModal')) closeExport();
-}
-
-function copyReport() {
-  const text = document.getElementById('exportText').textContent;
+function copyHistoryDetail() {
+  const text = document.getElementById('historyDetailText').textContent;
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('✓ Скопировано в буфер');
-    });
+    navigator.clipboard.writeText(text).then(() => showToast('✓ Скопировано'));
   } else {
     const el = document.createElement('textarea');
     el.value = text;
@@ -1088,7 +1286,7 @@ function copyReport() {
     el.select();
     document.execCommand('copy');
     document.body.removeChild(el);
-    showToast('✓ Скопировано в буфер');
+    showToast('✓ Скопировано');
   }
 }
 
