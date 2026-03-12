@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Психика">
+<title>🧠 Психика — Дневной трекер</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e28;
+    --border: #252a38;
+    --accent: #7eb8a4;
+    --accent2: #c4a882;
+    --accent3: #9b8ec4;
+    --text: #e8e4dc;
+    --text2: #8a8a9a;
+    --text3: #5a5a6a;
+    --danger: #e07a7a;
+    --success: #7eb8a4;
+    --radius: 14px;
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 12px;
+  }
+
+  .app-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: -0.3px;
+  }
+
+  .app-date {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 70px;
+    z-index: 90;
+  }
+
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    font-weight: 500;
+  }
+
+  /* ─── CONTENT ─── */
+  .content {
+    padding: 20px;
+    padding-bottom: 120px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .section {
+    display: none;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .card-emoji { font-size: 18px; }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .card-subtitle {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* ─── FIELDS ─── */
+  .field { margin-bottom: 12px; }
+
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--text2);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="time"],
+  textarea,
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 10px 12px;
+    outline: none;
+    transition: var(--transition);
+    -webkit-appearance: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    background: #1d2130;
+  }
+
+  textarea {
+    resize: none;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+
+  select option { background: var(--surface2); }
+
+  /* ─── SLIDER ─── */
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .slider-val {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    min-width: 28px;
+    text-align: center;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 4px;
+    background: var(--border);
+    outline: none;
+    padding: 0;
+    border: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+
+  /* ─── RADIO / CHECKBOX ─── */
+  .radio-group, .check-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .radio-btn, .check-btn {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .radio-btn.selected, .check-btn.selected {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: var(--bg);
+  }
+
+  /* ─── TWO COLS ─── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ─── BOTTOM BAR ─── */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 20px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    background: rgba(13,15,20,0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    z-index: 200;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 13px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:active { opacity: 0.8; transform: scale(0.98); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:active { opacity: 0.8; }
+
+  /* ─── EXPORT MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 500;
+    padding: 20px;
+    align-items: flex-end;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .modal-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .export-text {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 12px;
+    color: var(--text2);
+    white-space: pre-wrap;
+    max-height: 280px;
+    overflow-y: auto;
+    line-height: 1.6;
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .modal-btns { display: flex; gap: 10px; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--accent);
+    color: var(--bg);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 999;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─── MISC ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .hint {
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 5px;
+    font-style: italic;
+  }
+
+  .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text3);
+    margin-bottom: 12px;
+    margin-top: 4px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">🧠 Психика</div>
+  <div class="app-date" id="headerDate"></div>
+</div>
+
+<div class="tabs" id="tabBar">
+  <button class="tab active" onclick="switchTab(0)">🧠 Психика</button>
+  <button class="tab" onclick="switchTab(1)">🧘 Тело</button>
+  <button class="tab" onclick="switchTab(2)">🛌 Сон</button>
+  <button class="tab" onclick="switchTab(3)">🚶 Активность</button>
+  <button class="tab" onclick="switchTab(4)">🍽 Питание</button>
+</div>
+
+<div class="content">
+
+  <!-- ══════════ РАЗДЕЛ 1: ПСИХИКА ══════════ -->
+  <div class="section active" id="section-0">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">📊</span>
+        <div>
+          <div class="card-title">Базовое состояние</div>
+          <div class="card-subtitle">Три ключевых показателя</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Энергия (0–10)</label>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="10" value="5" id="energy" oninput="updateSlider('energy','energyVal')">
+          <div class="slider-val" id="energyVal">5</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Тревога (0–10)</label>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="10" value="5" id="anxiety" oninput="updateSlider('anxiety','anxietyVal')">
+          <div class="slider-val" id="anxietyVal">5</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Уверенность (0–10)</label>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="10" value="5" id="confidence" oninput="updateSlider('confidence','confidenceVal')">
+          <div class="slider-val" id="confidenceVal">5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🌧</span>
+        <div><div class="card-title">Удар по самоценности</div></div>
+      </div>
+      <div class="field">
+        <textarea id="selfWorth" placeholder="Конкретная ситуация или мысль, которая ударила сегодня..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🔎</span>
+        <div><div class="card-title">Автоматическая мысль</div></div>
+      </div>
+      <div class="field">
+        <textarea id="autoThought" placeholder="Какая фраза звучала внутри? Без цензуры..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">⚖</span>
+        <div>
+          <div class="card-title">Проверка реальности</div>
+          <div class="card-subtitle">Тип мышления</div>
+        </div>
+      </div>
+      <div class="radio-group" id="realityCheck">
+        <button class="radio-btn" onclick="toggleRadio('realityCheck', this)">факт</button>
+        <button class="radio-btn" onclick="toggleRadio('realityCheck', this)">интерпретация</button>
+        <button class="radio-btn" onclick="toggleRadio('realityCheck', this)">катастрофизация</button>
+        <button class="radio-btn" onclick="toggleRadio('realityCheck', this)">сравнение</button>
+        <button class="radio-btn" onclick="toggleRadio('realityCheck', this)">обесценивание</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🔥</span>
+        <div><div class="card-title">Поддерживающая альтернатива</div></div>
+      </div>
+      <div class="field">
+        <textarea id="alternative" placeholder="Более взрослая и устойчивая мысль (не «я лучший», а «я в процессе»)..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">👉</span>
+        <div><div class="card-title">Где я был устойчив?</div></div>
+      </div>
+      <div class="field">
+        <textarea id="stability" placeholder="Минимум 1 пункт. Даже мелочь. Это ключевой раздел для самоценности..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🌱</span>
+        <div><div class="card-title">Малый шаг к росту</div></div>
+      </div>
+      <div class="field">
+        <textarea id="growthStep" placeholder="Что сделал для прогресса, учебы, писательства, системы..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🌿</span>
+        <div><div class="card-title">Малый шаг для себя</div></div>
+      </div>
+      <div class="field">
+        <textarea id="selfCare" placeholder="Что сделал для себя: похвалил, заметил прогресс, забота о теле и психике..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🧘</span>
+        <div><div class="card-title">Контроль тревоги</div></div>
+      </div>
+      <div class="field">
+        <textarea id="anxietyControl" placeholder="Ситуация, где удалось не разгонять тревогу, держать эмоции под контролем..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">💧</span>
+        <div><div class="card-title">Энергия / ресурсы</div></div>
+      </div>
+      <div class="field">
+        <textarea id="resources" placeholder="Прогулка, движение, вода, сон, дыхательные практики..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">📊</span>
+        <div><div class="card-title">Итоговое ощущение дня</div></div>
+      </div>
+      <div class="field">
+        <textarea id="daySummary" placeholder="1–2 предложения. Как себя чувствую после дня, что укрепило самоценность..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🧱</span>
+        <div><div class="card-title">Маленький кирпич дня</div></div>
+      </div>
+      <div class="field">
+        <textarea id="smallBrick" placeholder="Что сегодня стало на 1% лучше в моей системе..."></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ РАЗДЕЛ 2: ТЕЛО ══════════ -->
+  <div class="section" id="section-1">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">⚖️</span>
+        <div><div class="card-title">Физическое состояние</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Вес (кг, утром)</label>
+          <input type="number" id="weight" placeholder="70.5" step="0.1">
+        </div>
+        <div class="field">
+          <label>Самочувствие (1–5)</label>
+          <div class="slider-wrap">
+            <input type="range" min="1" max="5" value="3" id="wellbeing" oninput="updateSlider('wellbeing','wellbeingVal')">
+            <div class="slider-val" id="wellbeingVal">3</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Отёчность / тяжесть (где)</label>
+        <input type="text" id="swelling" placeholder="нет / ноги / живот...">
+      </div>
+
+      <div class="field">
+        <label>ЖКТ</label>
+        <div class="radio-group" id="digestive">
+          <button class="radio-btn" onclick="toggleRadio('digestive', this)">норма</button>
+          <button class="radio-btn" onclick="toggleRadio('digestive', this)">тяжесть</button>
+          <button class="radio-btn" onclick="toggleRadio('digestive', this)">вздутие</button>
+          <button class="radio-btn" onclick="toggleRadio('digestive', this)">проблемы</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🧠</span>
+        <div><div class="card-title">Психо-фон</div></div>
+      </div>
+
+      <div class="field">
+        <label>Стресс (1–5)</label>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="5" value="3" id="stress" oninput="updateSlider('stress','stressVal')">
+          <div class="slider-val" id="stressVal">3</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Аппетит</label>
+        <div class="radio-group" id="appetite">
+          <button class="radio-btn" onclick="toggleRadio('appetite', this)">низкий</button>
+          <button class="radio-btn" onclick="toggleRadio('appetite', this)">норм</button>
+          <button class="radio-btn" onclick="toggleRadio('appetite', this)">высокий</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Тяга к сладкому</label>
+        <div class="radio-group" id="sweetCraving">
+          <button class="radio-btn" onclick="toggleRadio('sweetCraving', this)">нет</button>
+          <button class="radio-btn" onclick="toggleRadio('sweetCraving', this)">умеренная</button>
+          <button class="radio-btn" onclick="toggleRadio('sweetCraving', this)">сильная</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Энергия вечером (1–5)</label>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="5" value="3" id="eveningEnergy" oninput="updateSlider('eveningEnergy','eveningEnergyVal')">
+          <div class="slider-val" id="eveningEnergyVal">3</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🎯</span>
+        <div><div class="card-title">Мини-вывод дня</div></div>
+      </div>
+      <div class="field">
+        <textarea id="bodyConclusion" placeholder="Что было главным? Что сработало? Где потеря контроля?"></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🔄</span>
+        <div><div class="card-title">Фокус на завтра</div></div>
+      </div>
+      <div class="field">
+        <input type="text" id="tomorrowFocus" placeholder="Например: «вода 2 л» или «сон до 00:30»">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ РАЗДЕЛ 3: СОН ══════════ -->
+  <div class="section" id="section-2">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🛌</span>
+        <div><div class="card-title">Параметры сна</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Время отбоя</label>
+          <input type="time" id="bedtime" value="23:30">
+        </div>
+        <div class="field">
+          <label>Время подъёма</label>
+          <input type="time" id="wakeTime" value="07:30">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Часов сна (факт)</label>
+          <input type="number" id="sleepHours" placeholder="7.5" step="0.5">
+        </div>
+        <div class="field">
+          <label>Пробуждений</label>
+          <input type="number" id="wakeUps" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Качество сна (1–5)</label>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="5" value="3" id="sleepQuality" oninput="updateSlider('sleepQuality','sleepQualityVal')">
+          <div class="slider-val" id="sleepQualityVal">3</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ РАЗДЕЛ 4: АКТИВНОСТЬ ══════════ -->
+  <div class="section" id="section-3">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🚶</span>
+        <div><div class="card-title">Движение</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Шаги</label>
+          <input type="number" id="steps" placeholder="8000">
+        </div>
+        <div class="field">
+          <label>Общая активность</label>
+          <select id="activityLevel">
+            <option value="">—</option>
+            <option value="низкая">низкая</option>
+            <option value="средняя">средняя</option>
+            <option value="высокая">высокая</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Тип тренировки</label>
+          <input type="text" id="workoutType" placeholder="бег, силовая...">
+        </div>
+        <div class="field">
+          <label>Длительность (мин)</label>
+          <input type="number" id="workoutDuration" placeholder="45">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════ РАЗДЕЛ 5: ПИТАНИЕ ══════════ -->
+  <div class="section" id="section-4">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">🍽</span>
+        <div><div class="card-title">Макронутриенты</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Калории</label>
+          <input type="number" id="calories" placeholder="2000">
+        </div>
+        <div class="field">
+          <label>Белки (г)</label>
+          <input type="number" id="protein" placeholder="130">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Жиры (г)</label>
+          <input type="number" id="fats" placeholder="70">
+        </div>
+        <div class="field">
+          <label>Углеводы (г)</label>
+          <input type="number" id="carbs" placeholder="200">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Переедательный эпизод?</label>
+        <div class="radio-group" id="overeating">
+          <button class="radio-btn" onclick="toggleRadio('overeating', this)">нет</button>
+          <button class="radio-btn" onclick="toggleRadio('overeating', this)">да</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Белок ≥ 130 г?</label>
+        <div class="radio-group" id="proteinGoal">
+          <button class="radio-btn" onclick="toggleRadio('proteinGoal', this)">да</button>
+          <button class="radio-btn" onclick="toggleRadio('proteinGoal', this)">нет</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">💧</span>
+        <div><div class="card-title">Гидратация</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label>Вода (мл)</label>
+          <input type="number" id="water" placeholder="2000">
+        </div>
+        <div class="field">
+          <label>Кофе / чай (мл)</label>
+          <input type="number" id="coffeeML" placeholder="400">
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /content -->
+
+<!-- Bottom Bar -->
+<div class="bottom-bar">
+  <button class="btn btn-secondary" onclick="saveData()">💾 Сохранить</button>
+  <button class="btn btn-primary" onclick="openExport()">📋 Экспорт для ChatGPT</button>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal" onclick="closeExportOnBg(event)">
+  <div class="modal">
+    <div class="modal-title">📋 Отчёт готов</div>
+    <div class="modal-sub">Скопируйте и вставьте в ChatGPT</div>
+    <div class="export-text" id="exportText"></div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeExport()">Закрыть</button>
+      <button class="btn btn-primary" onclick="copyReport()">📋 Скопировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATE ───
+const today = new Date();
+const dateStr = today.toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+const dateKey = today.toISOString().split('T')[0];
+document.getElementById('headerDate').textContent = dateStr;
+
+// ─── TABS ───
+function switchTab(idx) {
+  document.querySelectorAll('.section').forEach((s,i) => s.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ─── SLIDERS ───
+function updateSlider(id, valId) {
+  document.getElementById(valId).textContent = document.getElementById(id).value;
+}
+
+// ─── RADIO ───
+function toggleRadio(groupId, btn) {
+  const group = document.getElementById(groupId);
+  group.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function getRadio(groupId) {
+  const sel = document.querySelector(`#${groupId} .radio-btn.selected`);
+  return sel ? sel.textContent : '—';
+}
+
+// ─── SAVE ───
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value || '—' : '—';
+}
+
+function saveData() {
+  const data = collectData();
+  try {
+    localStorage.setItem('psychika_' + dateKey, JSON.stringify(data));
+    showToast('✓ Сохранено');
+  } catch(e) {
+    showToast('✓ Данные готовы к экспорту');
+  }
+}
+
+function collectData() {
+  return {
+    date: dateStr,
+    energy: document.getElementById('energy').value,
+    anxiety: document.getElementById('anxiety').value,
+    confidence: document.getElementById('confidence').value,
+    selfWorth: getVal('selfWorth'),
+    autoThought: getVal('autoThought'),
+    realityCheck: getRadio('realityCheck'),
+    alternative: getVal('alternative'),
+    stability: getVal('stability'),
+    growthStep: getVal('growthStep'),
+    selfCare: getVal('selfCare'),
+    anxietyControl: getVal('anxietyControl'),
+    resources: getVal('resources'),
+    daySummary: getVal('daySummary'),
+    smallBrick: getVal('smallBrick'),
+    // Body
+    weight: getVal('weight'),
+    wellbeing: document.getElementById('wellbeing').value,
+    swelling: getVal('swelling'),
+    digestive: getRadio('digestive'),
+    stress: document.getElementById('stress').value,
+    appetite: getRadio('appetite'),
+    sweetCraving: getRadio('sweetCraving'),
+    eveningEnergy: document.getElementById('eveningEnergy').value,
+    bodyConclusion: getVal('bodyConclusion'),
+    tomorrowFocus: getVal('tomorrowFocus'),
+    // Sleep
+    bedtime: getVal('bedtime'),
+    wakeTime: getVal('wakeTime'),
+    sleepHours: getVal('sleepHours'),
+    wakeUps: getVal('wakeUps'),
+    sleepQuality: document.getElementById('sleepQuality').value,
+    // Activity
+    steps: getVal('steps'),
+    activityLevel: getVal('activityLevel'),
+    workoutType: getVal('workoutType'),
+    workoutDuration: getVal('workoutDuration'),
+    // Food
+    calories: getVal('calories'),
+    protein: getVal('protein'),
+    fats: getVal('fats'),
+    carbs: getVal('carbs'),
+    overeating: getRadio('overeating'),
+    proteinGoal: getRadio('proteinGoal'),
+    water: getVal('water'),
+    coffeeML: getVal('coffeeML'),
+  };
+}
+
+// ─── EXPORT ───
+function openExport() {
+  const d = collectData();
+  const report = `🧠 Отчет Психика — ${d.date}
+
+1. Базовое состояние
+• Энергия: ${d.energy}/10
+• Тревога: ${d.anxiety}/10
+• Уверенность: ${d.confidence}/10
+
+🌧 2. Что сегодня ударило по самоценности?
+${d.selfWorth}
+
+🔎 3. Автоматическая мысль
+${d.autoThought}
+
+⚖ 4. Проверка реальности
+Тип: ${d.realityCheck}
+
+🔥 5. Поддерживающая альтернатива
+${d.alternative}
+
+👉 6. Где я сегодня был устойчив?
+${d.stability}
+
+🌱 7. Малый шаг к росту / развитию
+${d.growthStep}
+
+🌿 8. Малый шаг для себя
+${d.selfCare}
+
+🧘 9. Контроль тревоги
+${d.anxietyControl}
+
+💧 10. Энергия / ресурсы
+${d.resources}
+
+📊 11. Итоговое ощущение дня
+${d.daySummary}
+
+🧱 12. Маленький кирпич дня
+${d.smallBrick}
+
+━━━━━━━━━━━━━━━━━━━━
+🧘 ТЕЛО — ${d.date}
+
+⚖️ Тело
+• Вес: ${d.weight} кг
+• Самочувствие: ${d.wellbeing}/5
+• Отёчность: ${d.swelling}
+• ЖКТ: ${d.digestive}
+
+🛌 Сон
+• Время отбоя: ${d.bedtime}
+• Подъём: ${d.wakeTime}
+• Часов сна: ${d.sleepHours}
+• Пробуждений: ${d.wakeUps}
+• Качество: ${d.sleepQuality}/5
+
+🚶 Активность
+• Шаги: ${d.steps}
+• Тренировка: ${d.workoutType} — ${d.workoutDuration} мин
+• Активность: ${d.activityLevel}
+
+🍽 Питание
+• Калории: ${d.calories} ккал
+• Белки: ${d.protein} г
+• Жиры: ${d.fats} г
+• Углеводы: ${d.carbs} г
+• Переедание: ${d.overeating}
+• Белок ≥130 г: ${d.proteinGoal}
+
+💧 Гидратация
+• Вода: ${d.water} мл
+• Кофе/чай: ${d.coffeeML} мл
+
+🧠 Психо-фон
+• Стресс: ${d.stress}/5
+• Аппетит: ${d.appetite}
+• Тяга к сладкому: ${d.sweetCraving}
+• Энергия вечером: ${d.eveningEnergy}/5
+
+🎯 Мини-вывод дня
+${d.bodyConclusion}
+
+🔄 Фокус на завтра
+${d.tomorrowFocus}`;
+
+  document.getElementById('exportText').textContent = report;
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExport() {
+  document.getElementById('exportModal').classList.remove('open');
+}
+
+function closeExportOnBg(e) {
+  if (e.target === document.getElementById('exportModal')) closeExport();
+}
+
+function copyReport() {
+  const text = document.getElementById('exportText').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('✓ Скопировано в буфер');
+    });
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('✓ Скопировано в буфер');
+  }
+}
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── LOAD SAVED ───
+try {
+  const saved = localStorage.getItem('psychika_' + dateKey);
+  if (saved) {
+    const d = JSON.parse(saved);
+    const setText = (id, val) => { const el = document.getElementById(id); if(el && val && val!=='—') el.value = val; };
+    const setSlider = (id, valId, val) => {
+      if(val) {
+        document.getElementById(id).value = val;
+        document.getElementById(valId).textContent = val;
+      }
+    };
+    setSlider('energy','energyVal', d.energy);
+    setSlider('anxiety','anxietyVal', d.anxiety);
+    setSlider('confidence','confidenceVal', d.confidence);
+    setSlider('wellbeing','wellbeingVal', d.wellbeing);
+    setSlider('stress','stressVal', d.stress);
+    setSlider('eveningEnergy','eveningEnergyVal', d.eveningEnergy);
+    setSlider('sleepQuality','sleepQualityVal', d.sleepQuality);
+    ['selfWorth','autoThought','alternative','stability','growthStep','selfCare',
+     'anxietyControl','resources','daySummary','smallBrick','weight','swelling',
+     'bodyConclusion','tomorrowFocus','bedtime','wakeTime','sleepHours','wakeUps',
+     'steps','workoutType','workoutDuration','calories','protein','fats','carbs',
+     'water','coffeeML'].forEach(id => setText(id, d[id]));
+
+    const setRadio = (groupId, val) => {
+      if(!val || val==='—') return;
+      document.querySelectorAll(`#${groupId} .radio-btn`).forEach(b => {
+        if(b.textContent === val) b.classList.add('selected');
+      });
+    };
+    setRadio('realityCheck', d.realityCheck);
+    setRadio('digestive', d.digestive);
+    setRadio('appetite', d.appetite);
+    setRadio('sweetCraving', d.sweetCraving);
+    setRadio('overeating', d.overeating);
+    setRadio('proteinGoal', d.proteinGoal);
+    const sel = document.getElementById('activityLevel');
+    if(sel && d.activityLevel && d.activityLevel!=='—') sel.value = d.activityLevel;
+  }
+} catch(e) {}
+</script>
+</body>
+</html>
